@@ -1,0 +1,47 @@
+<div *ngIf="auth.isloggedIn">
+    <div *ngIf="auth.user | async as user">
+        <button (click)="logOut()" style="float: right">Logout</button>
+        <h2> Hello {{ user.email }}</h2>
+    </div>
+
+</div>
+
+
+
+<div style="width: 1200px;margin: auto">
+    <div style="width: 50%;float: left;">
+        <h1 style="text-align: center"> Product List</h1>
+        <ul style="list-style-type: none">
+            <li *ngFor="let product of products;let i = index" style="border: solid 1px">
+                <div style="width: 40%;float: left">
+                    <img src="{{product.image_url}}" height="200px" width="50%">
+                </div>
+                <div style="width: 60%;float: left">
+                    <h3><b>Title:</b>{{product.name}}</h3>
+                    <h3><b>Price:</b>{{product.price}}$</h3>
+                    <button (click)="addProductToUserCart(product)">Add to cart</button>
+                </div>
+                <div style="clear: both"></div>
+            </li>
+        </ul>
+
+    </div>
+
+    <div style="width: 50%;float: left;">
+        <h2 style="text-align: center">Your Cart</h2>
+        <ul style="list-style-type: none">
+                <li *ngFor="let product of cartProducts;let i = index" style="border: solid 1px">
+                    <div style="width: 40%;float: left">
+                        <img src="{{product.image_url}}" height="200px" width="50%">
+                    </div>
+                    <div style="width: 60%;float: left">
+                        <h3><b>Title:</b>{{product.name}}</h3>
+                        <h3><b>Price:</b>{{product.price}}$</h3>
+                        <h3><b>Quantity:</b>{{product.quantity}}$</h3>
+                    </div>
+                    <div style="clear: both"></div>
+                </li>
+            </ul>
+    </div>
+    <div style="clear: both"></div>
+</div>
