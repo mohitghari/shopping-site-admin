@@ -2,7 +2,11 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { FirebaseAuthService } from '../firebase-auth.service';
-
+import { UserType } from '../util/user-type';
+import { format } from 'util';
+import { AngularFireAuth } from '@angular/fire/auth';
+import { AngularFirestore } from '@angular/fire/firestore';
+import * as firebase from 'firebase/app';
 
 @Component({
   selector: 'app-common-shared',
@@ -16,7 +20,10 @@ export class CommonSharedComponent implements OnInit {
   error: boolean;
   constructor(private fb: FormBuilder,
     private router: Router,
-    private auth: FirebaseAuthService
+    private auth: FirebaseAuthService,
+    private db: AngularFirestore,
+    private afAuth: AngularFireAuth,
+
   ) { }
 
   ngOnInit() {
@@ -28,11 +35,32 @@ export class CommonSharedComponent implements OnInit {
     );
   }
   _formSubmit() {
+    
     this.submitted = true;
     let user = this.myForm.value
     if (this.myForm.invalid) {
       return;
-    }
+    }else{
+        
+    this.auth.login(user)
+    .subscribe(
+      userType => {
+
+        if(userType == UserType.ADMIN){
+          this.router.navigate(['/admin'])
+        }else if(userType == UserType.CUSTOMER){
+          this.router.navigate(['/customer'])
+        }else{
+          console.error(`Invalid user Type: ${userType}`);
+        }
+        
+      },
+      error => console.error('error', error),
+      () => console.log('completed')
+    );
+
+  }
+    /*
     else {
       if (user.username == "admin@admin.com" && user.pwd == "admin123") {
         this.router.navigate(['/admin'])
@@ -48,6 +76,7 @@ export class CommonSharedComponent implements OnInit {
           });
       }
     }
+    */
   }
 
 

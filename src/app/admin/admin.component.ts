@@ -1,11 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FirebaseAuthService } from '../firebase-auth.service';
 import { FormGroup, FormBuilder, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
-import { AngularFireStorage } from 'angularfire2/storage';
 import { Observable } from 'rxjs';
-import { finalize } from 'rxjs/operators';
-import { AngularFirestore, } from '@angular/fire/firestore';
 
 @Component({
   selector: 'app-admin',
@@ -41,10 +37,13 @@ export class AdminComponent implements OnInit {
       {
         name: ['', Validators.required],
         price: ['', Validators.required],
-        //img:['',Validators.]
       }
     );
 
+  }
+
+  logOut() {
+    this.auth.logOut();
   }
 
   updateProduct(product) {
@@ -55,30 +54,26 @@ export class AdminComponent implements OnInit {
     this.selectedProduct = product;
     console.log(product)
     this.error = false
-
   }
+
   saveChanges() {
-    if (this.selectedProduct)
-     {
-      if(!this.file)
-      {
+    if (this.selectedProduct) {
+      if (!this.file) {
         this.updatedData = this.myForm.value
         this.auth.updateProduct(this.file, this.selectedProduct, this.updatedData)
-      }  
-      else
-      {
+      }
+      else {
         let filename = this.file.name.toString();
-        if(filename.split(".")[1] == "png" || filename.split(".")[1] == "jpg" || filename.split(".")[1] == "jpeg"){
+        if (filename.split(".")[1] == "png" || filename.split(".")[1] == "jpg" || filename.split(".")[1] == "jpeg") {
           this.updatedData = this.myForm.value
           this.auth.updateProduct(this.file, this.selectedProduct, this.updatedData)
-        }  
-        else{
-            alert('File must be image');
+        }
+        else {
+          alert('File must be image');
         }
       }
-    } 
-    else 
-    {
+    }
+    else {
       this.error = true
     }
   }

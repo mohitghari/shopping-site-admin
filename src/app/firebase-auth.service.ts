@@ -1,17 +1,19 @@
 import { Injectable } from '@angular/core';
 import { AngularFireAuth } from '@angular/fire/auth';
-import { AngularFirestore, AngularFirestoreDocument } from '@angular/fire/firestore';
+import { AngularFirestore } from '@angular/fire/firestore';
 import { Router } from '@angular/router';
-import { Observable, of, BehaviorSubject } from 'rxjs';
+import { Observable, of, from } from 'rxjs';
 import { AngularFireStorage } from 'angularfire2/storage';
-import { finalize, flatMap } from 'rxjs/operators';
+import { finalize, flatMap, map } from 'rxjs/operators';
+import { UserType } from './util/user-type';
 
 @Injectable({
   providedIn: 'root'
 })
 export class FirebaseAuthService {
+  currentUser;
   cartProducts: any[] = []
-  isloggedIn: boolean;
+  isloggedIn: boolean = true;
   user;
   userId: string;
   downloadURL: Observable<any>;
@@ -21,6 +23,35 @@ export class FirebaseAuthService {
     private router: Router,
     private afStorage: AngularFireStorage,
   ) {
+
+
+    // this.afAuth.authState.pipe(
+    //   flatMap(user => {
+    //     if (user) {
+    //       this.userId = user.uid
+    //       console.log('yes')
+    //       this.getdata();
+    //       this.isloggedIn = true;
+    //       return this.db.collection(`Users/${user.uid}/products`).snapshotChanges()
+    //     }
+    //     else {
+    //       console.log('not log in')
+    //       this.isloggedIn = false;
+    //     }
+    //   }),
+    //   map(data => {
+    //     console.log(data);
+    //     this.cartProducts = data.map(e => {
+    //       return {
+    //         id: e.payload.doc.id,
+    //         ...e.payload.doc.data()
+    //       };
+    //     })
+    //   }
+
+    //   )
+    // )
+
     this.afAuth.authState.subscribe(
       user => {
         if (user) {
@@ -28,9 +59,8 @@ export class FirebaseAuthService {
           console.log('yes')
           this.getdata();
           this.isloggedIn = true;
-          this.db.collection(`Users/${user.uid}/products`).snapshotChanges().subscribe(
-            data => {
-              console.log('data', data);
+          this.db.collection(`Users/${user.uid}/products`).snapshotChanges().pipe(
+            map(data => {
               this.cartProducts = data.map(e => {
                 return {
                   id: e.payload.doc.id,
@@ -38,7 +68,7 @@ export class FirebaseAuthService {
                 };
               })
             }
-          );
+            ));
         }
         else {
           console.log('not log in')
@@ -46,8 +76,6 @@ export class FirebaseAuthService {
         }
       }
     )
-
-   
   }
 
   logOut() {
@@ -55,6 +83,7 @@ export class FirebaseAuthService {
       this.router.navigate(['/login']);
     });
   }
+
   isLoggedIn(): Observable<boolean> {
     return of(this.isloggedIn);
   }
@@ -73,6 +102,7 @@ export class FirebaseAuthService {
       this.db.collection('Users/' + this.userId + '/products').doc(product.id).set(product)
     }
   }
+
   getCartData(): Observable<any> {
 
     return this.afAuth.authState
@@ -113,10 +143,10 @@ export class FirebaseAuthService {
         finalize(() => {
           this.downloadURL = fileRef.getDownloadURL()
           this.downloadURL.subscribe(
-            data => {
-              console.log(data);
+            image_link => {
+              console.log(image_link);
               this.db.collection('Product').doc(product.id).update({
-                image_url: data,
+                image_url: image_link,
                 name: updatedata.name,
                 price: updatedata.price
               })
@@ -174,17 +204,78 @@ export class FirebaseAuthService {
     else {
       alert('File must be images')
     }
-
-
   }
 
-  login(user) {
-    //this.afAuth.auth.signInWithEmailAndPassword(user.email,user.password);
-    return new Promise<any>((resolve, reject) => {
+  login(user): Observable<UserType> {
+
+    return from(
       this.afAuth.auth.signInWithEmailAndPassword(user.username, user.pwd)
-        .then(res => {
-          resolve(res);
-        }, err => reject(err))
-    })
+    ).pipe(
+      flatMap(user => {
+        console.log(user.user)
+        const userId = user.user.uid;
+        return this.db.collection('AdminUser').doc(userId).get()
+      }),
+      map(document => {
+
+        // console.log(document.data())
+        // console.log('document exists', document.exists);
+
+        if (document.exists === true) {
+          this.currentUser = 'admin'
+          return UserType.ADMIN
+        }
+        this.currentUser = 'customer'
+        return UserType.CUSTOMER;
+
+      })
+    )
+
+
+
+    /* return from(
+       this.afAuth.auth.signInWithEmailAndPassword(user.username, user.pwd)
+     ).pipe(
+       flatMap(user => {
+         if (user) {
+           const userId = user.user.uid;
+           return this.db.collection('AdminUser').doc(userId).snapshotChanges()
+         }
+       }),
+       map(doc => {
+         console.log(doc.payload.data())
+         if (doc.payload.data()) {
+           console.log('Admin')
+         }
+         else {
+           console.log('Customer')
+         }
+       })
+     )*/
+
+
+    // this.afAuth.authState.subscribe(
+    //   data=>{
+    //     if(data)
+    //     {
+    //      // console.log(data)
+    //       this.db.collection('AdminUser').doc(data.uid).snapshotChanges().subscribe(
+    //         data=>{
+    //           let d1 = data.payload.data()
+    //          // console.log(data.payload.data());
+    //           if(d1)
+    //           {
+    //             console.log('admin')
+    //           }
+    //           else{
+    //             console.log('custmor')
+    //           }
+    //         }
+    //       )                 
+    //     }
+    //   }
+    // )
+
+
   }
 }

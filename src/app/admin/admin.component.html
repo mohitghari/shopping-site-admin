@@ -1,4 +1,4 @@
-
+<button (click)="logOut()" style="float: right">Logout</button>
 <div style="width: 1200px;margin: auto">
     <div style="width: 50%;float: left;">
             <h1 style="text-align: center"> Product List</h1>
@@ -23,7 +23,7 @@
         <h1 style="text-align: center">Add New Product</h1>
         <form [formGroup]="myForm" (ngSubmit)="_formSubmit()" style="text-align: -webkit-center;">
             <div class="form-group">
-                <input type="text" formControlName="name" class="form-control" placeholder="Enter name" />
+                <input type="text" formControlName="name" class="form-control" placeholder="Enter Product Title" />
                 <div *ngIf="myForm.controls.name.invalid && submitted" class="text-danger">
                     <small *ngIf="myForm.controls.name.errors.required">Title address is required.</small>
                 </div>
